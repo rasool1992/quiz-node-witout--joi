@@ -1,93 +1,64 @@
 const express = require('express');
-const joi = require('joi');
+// const joi = require('joi');
+var app = express();
+app.use(express.json());
 
-var apk = express();
-apk.use(express.json());
+//1- get / method
+app.get('/', (req, res) => {
+    res.send('HomePage');
+})
 
-// create variable contain itshare coursses:
-var itCourses=[
-    {id:1,name:'MEAN Stack'},
-    {id:2,name:'Oracle'},
-    {id:3,name:'Java'}
+var courses = [
+    { id: 1, name: 'Java' },
+    { id: 2, name: 'C#' },
+    { id: 3, name: 'Oracle' }
 ]
 
-// Read Home Page
-apk.get('/',(req,res)=>{
-    res.send("Welcome To HomePage");
+//2-get all courses of it share:
+app.get('/itshare', (req, res) => {
+    res.send(courses);
 })
 
-//Read All Itcourses
-apk.get('/itshare/',(req,res)=>{
-    res.send(itCourses);
+//3-get specific route of courses:
+app.get('/itshare/:id', (req, res) => {
+    var course = courses.find(p => p.id === parseInt(req.params.id));
+    if (!course) return res.status(404).send("Page Not Found");
+    res.send(course);
 })
 
-//Read Product in /itshare resourses
-apk.get('/itshare/:id/',(req,res)=>{
-    let itcourse= itCourses.find((productId)=>productId.id === parseInt(req.params.id));
-    if (!itcourse){res.status(404).send("page not found");}
-    res.send(itcourse);
-})
-
-//post method
-apk.post('/itshare/:id/',(req,res)=>{
-    // Validation:
-    const schema = {
-        name: joi.string().min(5).required()
-    };
-    const result= joi.validate(req.body.schema);
-    if(result.error){
-        res.status(400).send(result.error.details[0].message);
+//4- post method it use to write 
+app.post('/itshare/:id', (req, res) => {
+    //a- take an object from user:
+    var course = {
+        id: courses.length + 1,
+        name: req.body.name
     }
-    //1-take an obj
-    let itcourse = 
-        {
-           id :  itCourses.length+1,
-           name: req.body.name
-        };
-    itCourses.push(itcourse);
+    courses.push(course);
     res.send();
 })
 
-//put method
-apk.put('/itshare/:id/',(req,res)=>{
-    //1-Check if it found or not
-    let itcourse= itCourses.find((productId)=>productId.id === parseInt(req.params.id));
-    if (!itcourse){res.status(404).send("page not found");}
+//5-Update Metod with Put
+app.put('/itshare/:id', (req, res) => {
+    //a- lock up an object and validate if it 404.
+    var course = courses.find(p => p.id === parseInt(req.params.id));
+    if (!course) return res.status(404).send("Page Not Found");
 
-
-    // 2-Validation of update:
-    const result= valChecker(req.body);
-    if(result.error){
-        res.status(400).send(result.error.details[0].message);
-    }
-    //2-Update
-    itcourse.name = req.body.name;
-    
-    //3- Send response
-    res.send(itcourse);
+    //b- update the obj
+    course.name = req.body.name;
+    res.send(course);
 })
 
-//Func Val
-function valChecker(itcourse){
-    const schema = {
-        name: joi.string().min(5).required()
-    };
-    return joi.validate(itcourse.schema);
-}
+// 6- Delete Method:
+app.delete('/itshare/:id', (req, res) => {
+    //a-Check Whick Course want to delete>
+    var course = courses.find(p => p.id === parseInt(req.params.id));
+    if (!course) return res.status(404).send("Page Not Found");
 
-//Delete Method
-apk.delete('/itshare/:id/',(req,res)=>{
-
-    //Check and Read ourse
-    let itcourse= itCourses.find((productId)=>productId.id === parseInt(req.params.id));
-    if (!itcourse){res.status(404).send("page not found");}
-    res.send(itcourse);
-    //del course
-    let index= itCourses.indexOf(itcourse);
-    itCourses.splice(index,1);
-    res.send(itcourse);
+    //b- get index of course and splice from 1:
+    var index = courses.indexOf(course);
+    courses.splice(index, 1);
+    res.send();
 })
 
-//Port And listen
-let port = process.env.port || 5000;
-apk.listen(port);
+const port = process.env.port || 5000;
+app.listen(port);
